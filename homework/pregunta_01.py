@@ -4,7 +4,9 @@
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
-
+import pandas as pd
+import zipfile
+from pathlib import Path
 
 def pregunta_01():
     """
@@ -71,3 +73,31 @@ def pregunta_01():
 
 
     """
+
+    with zipfile.ZipFile("files/input.zip", 'r', metadata_encoding = "utf-8") as zip_ref:
+        zip_ref.extractall("files")
+
+    conjuntos = ["train", "test"]
+
+    for conjunto in conjuntos:
+        ruta = Path("files/input/" + conjunto)
+        df = pd.DataFrame(columns=["phrase", "target"])
+        for carpeta in ruta.iterdir():
+            sentiment = None
+            if carpeta.name == "negative":
+                sentiment = "negative"
+            elif carpeta.name == "positive":
+                sentiment = "positive"
+            else:
+                sentiment = "neutral"
+            linea = None
+            for elemento in carpeta.iterdir():
+                with open(elemento, encoding='utf-8') as f:
+                    linea = f.readlines()[0]
+                dataframe = pd.DataFrame({"phrase": [linea], "target": [sentiment]})
+                df = pd.concat([df, dataframe], axis=0)
+
+        ruta_output = Path("files/output")
+        ruta_output.mkdir(parents=True, exist_ok=True)
+
+        df.to_csv("files/output/"+conjunto+"_dataset.csv", index=True)
